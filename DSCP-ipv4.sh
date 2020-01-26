@@ -1,31 +1,18 @@
 #!/bin/bash -x
 IPT="iptables"
+
 ##########
-#Veth start
+# This file can be used directly in Firewall - Custom Rules 
 ##########
-WANIF="pppoe-wan" #wan interface
 
-tc qdisc add dev wlan0 root mq #setup multi queue for wifi device
-## set up veth devices to handle inbound and outbound traffic
-ip link show | grep veth0 || ip link add type veth
+##########
+# Veth 
+# if need remove "#"
+# or copy and paste veth.sh file bellow
+##########
+#./veth.sh
 
-## get new veth interfaces up
-ip link set veth0 up
-ip link set veth1 up
 
-## trun on promisc mode,sometimes it's needed to make bridge work
-ip link set veth1 promisc on
-
-## add veth1 to bridge
-brctl addif br-lan veth1
-
-## just to make sure there's nothing inside this table
-ip rule del priority 100
-ip route flush table 100
-
-#########
-#Veth end
-#########
 ##ipset for streaming sites.they are being filled by dnsmasq
 ipset create streaming hash:ip
 ipset create usrcdn hash:ip
@@ -46,6 +33,11 @@ $IPT -t mangle -L POSTROUTING -n | grep dscp_mark || $IPT -t mangle -A POSTROUTI
 iptmark(){
     $IPT -t mangle -A dscp_mark "$@"
 }
+
+# Example How to limit video to 200ko/s in case you're on quota ( 4G/LTE )
+# first clean all : 
+#iptables -F forwarding_rule
+#iptables  -A forwarding_rule -m set --match-set vidstream src -m hashlimit --hashlimit-mode srcip,dstip --hashlimit-name "videolimit" --hashlimit-above 200kb/s -j DROP
 
 ## start by washing the dscp to CS0
 
@@ -79,6 +71,15 @@ iptmark -p udp -m multiport --port 123 -j DSCP --set-dscp-class CS6 -m comment -
 iptmark ! -p tcp -m set --match-set latsens src,dst -j DSCP --set-dscp-class CS6 -m comment --comment "latency sensitive ipset" ## set dscp tag for Latency Sensitive (latsens) ipset,udp
 
 iptmark -p tcp -m set --match-set latsens src,dst -j DSCP --set-dscp-class CS5 -m comment --comment "latency sensitive ipset" ## set dscp tag for Latency Sensitive (latsens) ipset
+
+#Fortnite - PC
+#TCP: 5222,5795-5847
+#UDP: 5222,5795-5847
+iptmark -p tcp -m multiport --port 5222 -j DSCP --set-dscp-class CS5 -m comment --comment "Fortnite - PC tcp"
+iptmark -p udp -m multiport --port 5222 -j DSCP --set-dscp-class CS5 -m comment --comment "Fortnite - PC udp"
+
+iptmark -p tcp  -m multiport --dports 5795:5847 -j DSCP --set-dscp-class CS5 -m comment --comment "Fortnite - PC tcp2"
+iptmark -p udp  -m multiport --dports 5795:5847 -j DSCP --set-dscp-class CS5 -m comment --comment "Fortnite - PC udp2"
 
 ########
 ##Browsing
