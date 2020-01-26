@@ -1,39 +1,28 @@
 #!/bin/bash -x
 IPT="iptables"
+
 ##########
-#Veth start
+# This file can be used directly in Firewall - Custom Rules 
 ##########
-WANIF="pppoe-wan" #wan interface
 
-tc qdisc add dev wlan0 root mq #setup multi queue for wifi device
-## set up veth devices to handle inbound and outbound traffic
-ip link show | grep veth0 || ip link add type veth
+##########
+# Veth 
+# if need remove "#"
+# or copy and paste veth.sh file bellow
+##########
+#./veth.sh
 
-## get new veth interfaces up
-ip link set veth0 up
-ip link set veth1 up
 
-## trun on promisc mode,sometimes it's needed to make bridge work
-ip link set veth1 promisc on
-
-## add veth1 to bridge
-brctl addif br-lan veth1
-
-## just to make sure there's nothing inside this table
-ip rule del priority 100
-ip route flush table 100
-
-## add routing for veth0 this will handle all traffic
-ip route add default dev veth0 table 100
-ip rule add iif $WANIF table 100 priority 100
-#########
-#Veth end
-#########
 ##ipset for streaming sites.they are being filled by dnsmasq
 ipset create streaming hash:ip
 ipset create usrcdn hash:ip
 ipset create bulk hash:ip
 ipset create latsens hash:ip
+
+
+## add routing for veth0 this will handle all traffic
+ip route add default dev veth0 table 100
+ip rule add iif $WANIF table 100 priority 100
 
 $IPT -t mangle -N dscp_mark > /dev/null 2>&1
 $IPT -t mangle -F dscp_mark
@@ -49,7 +38,6 @@ iptmark(){
 # first clean all : 
 #iptables -F forwarding_rule
 #iptables  -A forwarding_rule -m set --match-set vidstream src -m hashlimit --hashlimit-mode srcip,dstip --hashlimit-name "videolimit" --hashlimit-above 200kb/s -j DROP
-#iptables  -A forwarding_rule -s 64.18.0.0/20,64.233.160.0/19,66.102.0.0/20,66.249.80.0/20,72.14.192.0/18,74.125.0.0/16,173.194.0.0/16,207.126.144.0/20,209.85.128.0/17,216.58.208.0/20,216.239.32.0/19 -m hashlimit --hashlimit-mode srcip,dstip --hashlimit-name "videolimit" --hashlimit-above 200kb/s -j DROP
 
 ## start by washing the dscp to CS0
 
