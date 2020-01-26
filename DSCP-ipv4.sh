@@ -47,11 +47,6 @@ iptmark(){
     $IPT -t mangle -A dscp_mark "$@"
 }
 
-# Example How to limit video to 200ko/s in case you're on quota ( 4G/LTE )
-# first clean all : 
-#iptables -F forwarding_rule
-#iptables  -A forwarding_rule -m set --match-set vidstream src -m hashlimit --hashlimit-mode srcip,dstip --hashlimit-name "videolimit" --hashlimit-above 200kb/s -j DROP
-
 ## start by washing the dscp to CS0
 
 iptmark -j DSCP --set-dscp 0
