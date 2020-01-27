@@ -23,6 +23,9 @@ brctl addif br-lan veth1
 ip rule del priority 100
 ip route flush table 100
 
+## add routing for veth0 this will handle all traffic
+ip route add default dev veth0 table 100
+ip rule add iif $WANIF table 100 priority 100
 #########
 #Veth end
 #########
@@ -31,11 +34,6 @@ ipset create streaming hash:ip
 ipset create usrcdn hash:ip
 ipset create bulk hash:ip
 ipset create latsens hash:ip
-
-
-## add routing for veth0 this will handle all traffic
-ip route add default dev veth0 table 100
-ip rule add iif $WANIF table 100 priority 100
 
 $IPT -t mangle -N dscp_mark > /dev/null 2>&1
 $IPT -t mangle -F dscp_mark
