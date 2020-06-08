@@ -66,6 +66,10 @@ iptmark -p udp -m connmark ! --mark 0x55 -m multiport ! --ports 22,25,53,67,68,1
 #large udp streams like video call get AF41
 iptmark -p udp -m connmark ! --mark 0x55 -m multiport ! --ports 22,25,53,67,68,123,143,161,162,514,5353,80,443,8080,60001 -m connbytes --connbytes 940:1500 --connbytes-dir both --connbytes-mode avgpkt -j DSCP --set-dscp-class AF41 -m comment --comment "large udp connection gets AF41"
 
+# Zoom Video Calls
+# https://zoom.us
+iptmark -p udp -m connmark ! --mark 0x55 -m multiport ! --ports 8801,8802,8803,8804,8805,8806,8807,8808,8809,8810 -m connbytes --connbytes 940:1500 --connbytes-dir both --connbytes-mode avgpkt -j DSCP --set-dscp-class AF41 -m comment --comment "Zoom Video calls gets AF41"
+
 ########################################
 # Latency Sensitive (gaming/voip)
 ########################################
@@ -87,8 +91,14 @@ iptmark -p tcp -m set --match-set latsens src,dst -j DSCP --set-dscp-class CS5 -
 ########
 ##Browsing
 ########
+
 ## medium priority for browsing
 iptmark -p tcp -m multiport --ports 80,443,8080 -j DSCP --set-dscp-class CS3 -m comment --comment "Browsing at CS3"
+
+## medium priority for acessing our DVR CCTV system so is not class as bulk traffic or high priority
+
+# Uncomment this line below if you access any DVR CCTV system
+#iptmark -p tcp -m multiport --ports 8000,34567,37777,37778 -j DSCP --set-dscp-class CS3 -m comment --comment "CCTV DVR at CS3"
 
 ##################
 #TCP SYN,ACK flows
@@ -125,7 +135,7 @@ iptmark -p tcp -m set --match-set bulk src,dst -j DSCP --set-dscp-class CS1 -m c
 iptmark -p udp -m set --match-set bulk src,dst -j DSCP --set-dscp-class CS1 -m comment --comment "bulk traffic ipset"
 iptmark -p tcp -m connbytes --connbytes 350000: --connbytes-dir both --connbytes-mode bytes -m dscp --dscp-class CS0 -j DSCP --set-dscp-class CS1 -m comment --comment "Downgrade CS0 to CS1 for bulk tcp traffic"
 iptmark -p tcp -m connbytes --connbytes 350000: --connbytes-dir both --connbytes-mode bytes -m dscp --dscp-class CS3 -j DSCP --set-dscp-class CS1 -m comment --comment "Downgrade CS3 to CS1 for bulk tcp traffic"
-iptmark -p udp -m multiport --port 60001 -j DSCP --set-dscp-class CS1 -m comment --comment "bulk torrent port UDP"
+iptmark -p udp -m multiport --port 51413,60001,8999 -j DSCP --set-dscp-class CS1 -m comment --comment "bulk torrent port UDP"
 
 
 #tcpdump rule, copy and paste this rule into terminal, this rule is used to capture realtime traffic, you can change ip to what you like
