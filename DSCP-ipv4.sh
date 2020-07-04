@@ -67,6 +67,20 @@ iptmark ! -p tcp -m set --match-set latsens src,dst -j DSCP --set-dscp-class CS6
 
 iptmark -p tcp -m set --match-set latsens src,dst -j DSCP --set-dscp-class CS5 -m comment --comment "latency sensitive ipset" ## set dscp tag for Latency Sensitive (latsens) ipset
 
+#VZW Wifi Calling
+iptmark -p udp -m multiport --port 4500 -j DSCP --set-dscp-class CS6 -m comment --comment "VZW wifi calling udp"
+
+#FaceTime
+iptmark -p udp -m multiport --port 3478:3497,16384:16387,16393:16402 -j DSCP --set-dscp-class CS5 -m comment --comment "FaceTime udp"
+
+#FaceTime/iMessage
+iptmark -p tcp -m multiport --port 5223 -j DSCP --set-dscp-class CS5 -m comment --comment "FaceTime/iMessage tcp"
+
+#High priority ipset, for CoD Mobile
+iptmark -p udp -m multiport --ports 7500,7774,20002 -j DSCP --set-dscp-class CS6 -m comment --comment "CoD Mobile udp"
+
+iptmark -p tcp -m multiport --ports 10012,65010,65050 -j DSCP --set-dscp-class CS5 -m comment --comment "CoD Mobile tcp"
+
 ########
 ##Browsing
 ########
