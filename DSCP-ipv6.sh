@@ -27,10 +27,6 @@ ipset create bulk6 hash:ip family inet6
 ipset create latsens hash:ip
 ipset create latsens6 hash:ip family inet6
 
-## add routing for veth0 this will handle all traffic
-ip route add default dev veth0 table 100
-ip rule add iif $WANIF table 100 priority 100
-
 $IPT -t mangle -N dscp_mark > /dev/null 2>&1
 $IPT6 -t mangle -N dscp_mark > /dev/null 2>&1
 
