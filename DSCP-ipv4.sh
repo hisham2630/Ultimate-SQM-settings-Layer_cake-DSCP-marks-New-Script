@@ -34,11 +34,6 @@ iptmark(){
     $IPT -t mangle -A dscp_mark "$@"
 }
 
-# Example How to limit video to 200ko/s in case you're on quota ( 4G/LTE )
-# first clean all : 
-#iptables -F forwarding_rule
-#iptables  -A forwarding_rule -m set --match-set vidstream src -m hashlimit --hashlimit-mode srcip,dstip --hashlimit-name "videolimit" --hashlimit-above 200kb/s -j DROP
-
 ## start by washing the dscp to CS0
 
 iptmark -j DSCP --set-dscp 0
@@ -71,15 +66,6 @@ iptmark -p udp -m multiport --port 123 -j DSCP --set-dscp-class CS6 -m comment -
 iptmark ! -p tcp -m set --match-set latsens src,dst -j DSCP --set-dscp-class CS6 -m comment --comment "latency sensitive ipset" ## set dscp tag for Latency Sensitive (latsens) ipset,udp
 
 iptmark -p tcp -m set --match-set latsens src,dst -j DSCP --set-dscp-class CS5 -m comment --comment "latency sensitive ipset" ## set dscp tag for Latency Sensitive (latsens) ipset
-
-#Fortnite - PC
-#TCP: 5222,5795-5847
-#UDP: 5222,5795-5847
-iptmark -p tcp -m multiport --port 5222 -j DSCP --set-dscp-class CS5 -m comment --comment "Fortnite - PC tcp"
-iptmark -p udp -m multiport --port 5222 -j DSCP --set-dscp-class CS5 -m comment --comment "Fortnite - PC udp"
-
-iptmark -p tcp  -m multiport --dports 5795:5847 -j DSCP --set-dscp-class CS5 -m comment --comment "Fortnite - PC tcp2"
-iptmark -p udp  -m multiport --dports 5795:5847 -j DSCP --set-dscp-class CS5 -m comment --comment "Fortnite - PC udp2"
 
 ########
 ##Browsing
