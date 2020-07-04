@@ -22,6 +22,10 @@ brctl addif br-lan veth1
 ip rule del priority 100
 ip route flush table 100
 
+## add routing for veth0 this will handle all traffic
+ip route add default dev veth0 table 100
+ip rule add iif "$WANIF" table 100 priority 100
+
 #########
 #Veth end
 #########
