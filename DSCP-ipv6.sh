@@ -1,35 +1,18 @@
 #!/bin/bash -x
 IPT="iptables"
 IPT6="ip6tables"
-###########
-#Veth start
-###########
-WANIF="pppoe-wan" #wan interface name
 
-tc qdisc add dev wlan0 root mq #setup multi queue for wifi device
-## set up veth devices to handle inbound and outbound traffic
-ip link show | grep veth0 || ip link add type veth
+##########
+# This file can be used directly in Firewall - Custom Rules 
+##########
 
-## get new veth interfaces up
-ip link set veth0 up
-ip link set veth1 up
+##########
+# Veth 
+# if need remove "#"
+# or copy and paste veth.sh file bellow
+##########
+#./veth.sh
 
-## trun on promisc mode,sometimes it's needed to make bridge work
-ip link set veth1 promisc on
-
-## add veth1 to bridge
-brctl addif br-lan veth1
-
-## just to make sure there's nothing inside this table
-ip rule del priority 100
-ip route flush table 100
-
-## add routing for veth0 this will handle all traffic
-ip route add default dev veth0 table 100
-ip rule add iif $WANIF table 100 priority 100
-#########
-#Veth end
-#########
 
 ##ipset for streaming sites.they are being filled by dnsmasq
 ipset create streaming hash:ip
@@ -110,6 +93,25 @@ ipt6mark ! -p tcp -m set --match-set latsens6 src,dst -j DSCP --set-dscp-class C
 
 iptmark -p tcp -m set --match-set latsens src,dst -j DSCP --set-dscp-class CS5 -m comment --comment "latency sensitive ipset" ## set dscp tag for Latency Sensitive (latsens) ipset
 ipt6mark -p tcp -m set --match-set latsens6 src,dst -j DSCP --set-dscp-class CS5 -m comment --comment "latency sensitive ipset6" ## set dscp tag for Latency Sensitive (latsens) ipset
+
+#VZW Wifi Calling
+iptmark -p udp -m multiport --port 4500 -j DSCP --set-dscp-class CS6 -m comment --comment "VZW wifi calling udp"
+ipt6mark -p udp -m multiport --port 4500 -j DSCP --set-dscp-class CS6 -m comment --comment "VZW wifi calling udp6"
+
+#FaceTime
+iptmark -p udp -m multiport --port 3478:3497,16384:16387,16393:16402 -j DSCP --set-dscp-class CS5 -m comment --comment "FaceTime udp"
+ipt6mark -p udp -m multiport --port 3478:3497,16384:16387,16393:16402 -j DSCP --set-dscp-class CS5 -m comment --comment "FaceTime udp"
+
+#FaceTime/iMessage
+iptmark -p tcp -m multiport --port 5223 -j DSCP --set-dscp-class CS5 -m comment --comment "FaceTime/iMessage tcp"
+ipt6mark -p tcp -m multiport --port 5223 -j DSCP --set-dscp-class CS5 -m comment --comment "FaceTime/iMessage tcp"
+
+#High priority ipset, for CoD Mobile
+iptmark -p udp -m multiport --ports 7500,7774,20002 -j DSCP --set-dscp-class CS6 -m comment --comment "CoD Mobile udp"
+ipt6mark -p udp -m multiport --ports 7500,7774,20002 -j DSCP --set-dscp-class CS6 -m comment --comment "CoD Mobile udp6"
+
+iptmark -p tcp -m multiport --ports 10012,65010,65050 -j DSCP --set-dscp-class CS5 -m comment --comment "CoD Mobile tcp"
+ipt6mark -p tcp -m multiport --ports 10012,65010,65050 -j DSCP --set-dscp-class CS5 -m comment --comment "CoD Mobile tcp6"
 
 ###########
 ##Browsing
